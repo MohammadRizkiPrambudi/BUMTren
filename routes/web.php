@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Guardian\GuardianController;
 use App\Http\Controllers\Pos\OrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -33,6 +34,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class)->names('categories');
         Route::resource('stocks', StockController::class)->names('stocks');
         Route::resource('users', UserController::class)->names('users');
+        Route::resource('guardians', GuardianController::class)->names('guardians');
     });
 
     Route::get('/admin/product/search', [StockController::class, 'getProducts'])->name('admin.stocks.products.search');
@@ -40,10 +42,15 @@ Route::middleware('auth')->group(function () {
     Route::prefix('kasir')->name('pos.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::post('/order', [OrderController::class, 'store'])->name('store');
-
-        // API Endpoints untuk POS
         Route::get('/search/santri', [OrderController::class, 'searchSantri'])->name('search.santri');
         Route::get('/products', [OrderController::class, 'getUnitProducts'])->name('products');
+        Route::post('sync-orders', [OrderController::class, 'syncOrders'])->name('sync.orders');
+    });
+
+    Route::prefix('orang-tua')->name('guardian.')->group(function () {
+        Route::get('dashboard', [GuardianController::class, 'index'])->name('dashboard');
+        Route::get('topup', [GuardianController::class, 'topupForm'])->name('topup.form');
+        // Route::post('topup/process', [GuardianController::class, 'processTopup'])->name('guardian.topup.process');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

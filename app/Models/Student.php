@@ -16,7 +16,7 @@ class Student extends Model
     // Relasi Many-to-Many ke Wali Santri
     public function guardians()
     {
-        return $this->belongsToMany(Guardian::class, 'student_guardian');
+        return $this->belongsToMany(Guardian::class, 'student_guardian', 'student_id', 'guardian_id');
     }
 
     // Relasi One-to-Many ke Transaksi Belanja

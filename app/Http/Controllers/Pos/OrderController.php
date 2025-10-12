@@ -9,12 +9,14 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\Student;
+use App\Models\SyncLog;
 use App\Models\UnitStock;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
+
 // Tambahkan ini jika model sudah ada
 
 // Import untuk kode status
@@ -203,6 +205,15 @@ class OrderController extends Controller
                 ]);
             }
 
+            SyncLog::create([
+                'unit_id'   => $cashierUnitId,
+                'data_type' => 'order',
+                'data_id'   => $order->id,
+                'sync_time' => now(),
+                'status'    => 'success',
+                'details'   => 'Order ' . $order->invoice_number . ' berhasil disimpan.',
+            ]);
+
             DB::commit();
             return redirect()->back()->with([
                 'success'     => 'Transaksi berhasil diproses.',
@@ -234,5 +245,140 @@ class OrderController extends Controller
         $runningNumber = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
         return "{$unitCode}-{$dateCode}-{$runningNumber}";
+    }
+
+    public function syncOrders(Request $request)
+    {
+        $request->validate([
+            'unit_id'             => 'required|exists:units,id',
+            'orders'              => 'required|array',
+            'orders.*.cart_items' => 'required|array',
+
+        ]);
+
+        $unitId      = $request->unit_id;
+        $syncResults = [];
+
+        foreach ($request->orders as $offlineOrder) {
+
+            DB::beginTransaction();
+            try {
+
+                $existingOrder = Order::where('invoice_number', $offlineOrder['invoice_number'])
+                    ->where('unit_id', $unitId)
+                    ->first();
+
+                if ($existingOrder) {
+
+                    $syncResults[] = [
+                        'invoice_number' => $offlineOrder['invoice_number'],
+                        'status'         => 'success',
+                        'message'        => 'Data sudah ada di server (Duplikat terdeteksi).',
+                    ];
+                    DB::commit();
+                    continue;
+                }
+
+                $newOrder = Order::create([
+                    'unit_id'        => $unitId,
+                    'student_id'     => $offlineOrder['student_id'] ?? null,
+                    'user_id'        => $offlineOrder['user_id'], // User ID kasir yang tercatat di offline
+                    'invoice_number' => $offlineOrder['invoice_number'],
+                    'payment_method' => $offlineOrder['payment_method'],
+                    'total_amount'   => $offlineOrder['total_amount'],
+                    'paid_cash'      => $offlineOrder['paid_cash'],
+                    'paid_e_card'    => $offlineOrder['paid_e_card'],
+                    'change_amount'  => $offlineOrder['change_amount'],
+
+                    'created_at'     => $offlineOrder['created_at'] ?? now(),
+                    'updated_at'     => now(),
+                ]);
+
+                $newBalance = 0;
+
+                foreach ($offlineOrder['cart_items'] as $item) {
+
+                    $newOrder->items()->create($item);
+
+                    $unitStock = UnitStock::where('unit_id', $unitId)
+                        ->where('product_id', $item['product_id'])
+                        ->first();
+                    if ($unitStock) {
+                        $unitStock->decrement('current_stock', $item['quantity']);
+                    }
+
+                    StockMovement::create([
+                        'product_id'   => $item['product_id'],
+                        'user_id'      => $offlineOrder['user_id'],
+                        'type'         => 'out',
+                        'quantity'     => $item['quantity'],
+                        'from_unit_id' => $unitId,
+                        'to_unit_id'   => null,
+                        'notes'        => 'Sinkronisasi Penjualan POS Offline: ' . $newOrder->invoice_number,
+                        'created_at'   => $offlineOrder['created_at'] ?? now(),
+                    ]);
+                }
+
+                if ($newOrder->paid_e_card > 0 && $newOrder->student_id) {
+                    $wallet = $newOrder->student->wallet;
+                    $wallet->decrement('current_balance', $newOrder->paid_e_card);
+                    $newBalance = $wallet->current_balance;
+
+                    WalletTransaction::create([
+                        'wallet_id'       => $wallet->id,
+                        'user_id'         => $offlineOrder['user_id'],
+                        'type'            => 'debit',
+                        'amount'          => $newOrder->paid_e_card,
+                        'current_balance' => $newBalance,
+                        'reference_id'    => $newOrder->invoice_number,
+                        'notes'           => 'Pembayaran pesanan (Sinkronisasi): ' . $newOrder->invoice_number,
+                        'created_at'      => $offlineOrder['created_at'] ?? now(),
+                    ]);
+                }
+                SyncLog::create([
+                    'unit_id'   => $unitId,
+                    'data_type' => 'order',
+                    'data_id'   => $newOrder->id,
+                    'sync_time' => now(),
+                    'status'    => 'success',
+                    'details'   => 'Order ' . $newOrder->invoice_number . ' berhasil disinkronkan.',
+                ]);
+
+                DB::commit();
+
+                $syncResults[] = [
+                    'invoice_number' => $offlineOrder['invoice_number'],
+                    'status'         => 'success',
+                    'message'        => 'Berhasil disinkronkan.',
+                ];
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $syncResults[] = [
+                    'invoice_number' => $offlineOrder['invoice_number'],
+                    'status'         => 'failed',
+                    'message'        => 'Gagal diproses: ' . $e->getMessage(),
+                ];
+
+                try {
+                    SyncLog::create([
+                        'unit_id'   => $unitId,
+                        'data_type' => 'order',
+                        'data_id'   => null,
+                        'sync_time' => now(),
+                        'status'    => 'failed',
+                        'details'   => 'Gagal sinkron Order ' . ($offlineOrder['invoice_number'] ?? 'Unknown') . ': ' . $e->getMessage(),
+                    ]);
+                } catch (\Exception $logE) {
+                    // Abaikan jika pencatatan log gagal
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proses sinkronisasi selesai.',
+            'results' => $syncResults,
+        ]);
     }
 }

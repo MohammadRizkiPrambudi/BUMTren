@@ -16,6 +16,10 @@ const adminNavItems = [
         route: "admin.students.index",
     },
     {
+        name: "Manajemen Orang Tua",
+        route: "admin.guardians.index",
+    },
+    {
         name: "Manajemen Unit Usaha",
         route: "admin.units.index",
     },
@@ -46,12 +50,10 @@ const posItem = {
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
-    // Pastikan user.roles ada sebelum mencoba mengaksesnya
     const userRoles = user.roles ? user.roles.map((role) => role.name) : [];
 
     console.log(userRoles);
 
-    // --- LOGIKA PERAN (ROLE-BASED LOGIC) ---
     const isCashier = userRoles.includes("cashier");
     const isAdmin = userRoles.includes("admin");
     const isManager = userRoles.includes("manager");
@@ -64,18 +66,14 @@ export default function AuthenticatedLayout({ header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
-    // Helper function to handle wildcard route matching for the NavLinks
     const isLinkActive = (item) => {
-        // Kami berasumsi 'admin.X.index' harus cocok dengan semua rute 'admin.X.*'
         if (item.route.endsWith(".index") && item.route !== "dashboard") {
             const baseRoute = item.route.replace(".index", "");
             return route().current(`${baseRoute}.*`);
         }
-        // Periksa rute 'pos.*' untuk menjaga tautan POS tetap aktif di seluruh sub-halaman POS
         if (item.route === "pos.index") {
             return route().current("pos.*");
         }
-        // Fallback ke pencocokan tepat untuk semua yang lain
         return route().current(item.route);
     };
 

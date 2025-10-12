@@ -27,11 +27,24 @@ export default function Index({ auth, cashierUnit }) {
         fetchProducts();
     }, []);
 
+    const logSuccessfulSync = async () => {
+        try {
+            await axios.post(route("pos.log.sync"));
+            console.log("Log sinkronisasi status Unit berhasil dicatat.");
+        } catch (error) {
+            console.error(
+                "Gagal mencatat log sinkronisasi status Unit:",
+                error
+            );
+        }
+    };
+
     // ambil produk
     const fetchProducts = async () => {
         try {
             const response = await axios.get(route("pos.products"));
             setProducts(response.data);
+            logSuccessfulSync();
         } catch (error) {
             Swal.fire("Gagal!", "Gagal memuat produk unit.", "error");
         }
