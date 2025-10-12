@@ -1,0 +1,54 @@
+<?php
+
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Pos\OrderController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+Route::get('/', function () {
+    return Inertia::render('Welcome', [
+        'canLogin'       => Route::has('login'),
+        'canRegister'    => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion'     => PHP_VERSION,
+    ]);
+});
+
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('students', StudentController::class)->names('students');
+        Route::resource('units', UnitController::class)->names('units');
+        Route::resource('products', ProductController::class)->names('products');
+        Route::resource('categories', CategoryController::class)->names('categories');
+        Route::resource('stocks', StockController::class)->names('stocks');
+        Route::resource('users', UserController::class)->names('users');
+    });
+
+    Route::get('/admin/product/search', [StockController::class, 'getProducts'])->name('admin.stocks.products.search');
+
+    Route::prefix('kasir')->name('pos.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::post('/order', [OrderController::class, 'store'])->name('store');
+
+        // API Endpoints untuk POS
+        Route::get('/search/santri', [OrderController::class, 'searchSantri'])->name('search.santri');
+        Route::get('/products', [OrderController::class, 'getUnitProducts'])->name('products');
+    });
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__ . '/auth.php';
