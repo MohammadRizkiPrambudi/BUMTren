@@ -40,6 +40,34 @@ const TopupFormModal = ({ student, show, onClose }) => {
         onClose();
     };
 
+    //tripay
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+
+    //     if (data.amount < 10000) {
+    //         alert("Minimal top-up Rp10.000");
+    //         return;
+    //     }
+
+    //     const confirmTopup = confirm(
+    //         `Yakin ingin top-up Rp${formatRupiah(data.amount)}?`
+    //     );
+    //     if (!confirmTopup) return;
+
+    //     try {
+    //         const res = await axios.post(route("guardian.topup.process"), data);
+    //         const checkoutUrl = res.data.checkout_url;
+
+    //         // Buka halaman pembayaran Tripay (QRIS / Bank / dll)
+    //         window.open(checkoutUrl, "_blank");
+    //         alert("Silakan lanjutkan pembayaran di halaman Tripay.");
+    //         closeModal();
+    //     } catch (error) {
+    //         console.error(error);
+    //         alert("Gagal membuat transaksi. Coba lagi.");
+    //     }
+    // };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -259,7 +287,7 @@ const ChildCard = ({ student, onOpenTopup }) => {
                     {student.name}
                 </h2>
                 <PrimaryButton onClick={() => onOpenTopup(student)}>
-                    + Top-Up Saldo
+                    Top-Up Saldo
                 </PrimaryButton>
             </div>
 
@@ -375,7 +403,7 @@ export default function Dashboard({ auth, guardian, children }) {
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-indigo-700 text-white p-6 sm:rounded-lg mb-8">
                         <h1 className="text-3xl font-extrabold">
-                            Selamat Datang, {guardian.name}
+                            Selamat Datang, {auth.user.name}
                         </h1>
                         <p className="mt-1">
                             Anda terhubung dengan {children.length} santri.

@@ -44,35 +44,6 @@ class GuardianController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan formulir top-up/pembayaran (Langkah selanjutnya setelah ini).
-     */
-    // public function topupForm(Request $request)
-    // {
-
-    //     $student = Student::where('id', $request->student_id)
-    //         ->with('wallet')
-    //         ->firstOrFail();
-
-    //     $guardian = Auth::user()->guardian;
-
-    //     if (! $guardian || ! $guardian->students->contains($student->id)) {
-    //         return redirect()->route('guardian.dashboard')->with('error', 'Akses ditolak atau siswa tidak ditemukan di bawah pengawasan Anda.');
-    //     }
-
-    //     $balance = optional($student->wallet)->current_balance ?? 0;
-
-    //     return Inertia::render('Guardian/TopupForm', [
-    //         'student' => [
-    //             'id'      => $student->id,
-    //             'name'    => $student->name,
-    //             'class'   => $student->class,
-    //             'balance' => (float) $balance,
-    //         ],
-    //     ]);
-
-    // }
-
     public function processTopup(Request $request)
     {
         $request->validate([
@@ -119,4 +90,70 @@ class GuardianController extends Controller
             return redirect()->back()->with('error', 'Gagal memproses Top-Up. Silakan coba lagi.');
         }
     }
+
+    // public function processTopup(Request $request)
+    // {
+    //     $request->validate([
+    //         'student_id'     => 'required|exists:students,id',
+    //         'amount'         => 'required|numeric|min:10000',
+    //         'payment_method' => 'required|string',
+    //     ]);
+
+    //     $wallet = ECardWallet::where('student_id', $request->student_id)->firstOrFail();
+
+    //     // 1️⃣ Buat transaksi lokal pending
+    //     $transaction = WalletTransaction::create([
+    //         'wallet_id' => $wallet->id,
+    //         'amount'    => $request->amount,
+    //         'type'      => 'topup',
+    //         'status'    => 'pending',
+    //         'order_id'  => 'TOPUP-' . time() . '-' . $wallet->id,
+    //     ]);
+
+    //     // 2️⃣ Generate signature Tripay
+    //     $merchantCode = config('tripay.merchant_code');
+    //     $apiKey       = config('tripay.api_key');
+    //     $privateKey   = config('tripay.private_key');
+    //     $signature    = hash_hmac('sha256', $merchantCode . $transaction->order_id . $request->amount, $privateKey);
+
+    //     // 3️⃣ Payload ke Tripay
+    //     $payload = [
+    //         'method'         => $request->payment_method, // contoh: QRIS, BCA, MANDIRI, ALFAMART
+    //         'merchant_ref'   => $transaction->order_id,
+    //         'amount'         => $request->amount,
+    //         'customer_name'  => auth()->user()->name,
+    //         'customer_email' => auth()->user()->email,
+    //         'order_items'    => [
+    //             [
+    //                 'sku'      => 'TOPUP-' . $wallet->id,
+    //                 'name'     => 'Top-Up E-Card Santri',
+    //                 'price'    => $request->amount,
+    //                 'quantity' => 1,
+    //             ],
+    //         ],
+    //         'callback_url'   => config('tripay.callback_url'),
+    //         'expired_time'   => time() + (24 * 60 * 60),
+    //         'signature'      => $signature,
+    //     ];
+
+    //     // 4️⃣ Request ke Tripay
+    //     $response = Http::withToken($apiKey)
+    //         ->post(config('tripay.sandbox_base_url') . '/transaction/create', $payload);
+
+    //     $result = $response->json();
+
+    //     if (isset($result['success']) && $result['success']) {
+    //         $transaction->update([
+    //             'reference'   => $result['data']['reference'],
+    //             'payment_url' => $result['data']['checkout_url'],
+    //         ]);
+
+    //         return response()->json([
+    //             'checkout_url' => $result['data']['checkout_url'],
+    //             'method'       => $result['data']['payment_name'],
+    //         ]);
+    //     }
+
+    //     return response()->json(['error' => 'Gagal membuat transaksi.'], 500);
+    // }
 }
