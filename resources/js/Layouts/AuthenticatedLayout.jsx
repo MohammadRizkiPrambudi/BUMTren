@@ -16,7 +16,7 @@ const adminMenuGroups = [
         ],
     },
     {
-        group: "Manajemen Produk",
+        group: "Manajemen Penjualan",
         defaultRoute: "admin.products.index",
         items: [
             { name: "Unit Usaha", route: "admin.units.index" },

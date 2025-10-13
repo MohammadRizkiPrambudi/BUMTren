@@ -9,6 +9,13 @@ import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import Modal from "@/Components/Modal";
 import Select from "react-select";
+import {
+    FaEdit,
+    FaPlusCircle,
+    FaSearch,
+    FaSyncAlt,
+    FaTrash,
+} from "react-icons/fa";
 
 const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -64,30 +71,31 @@ const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
                 <InputError message={errors.name} className="mt-2" />
             </div>
 
-            {/* No Telepon */}
-            <div className="mb-4">
-                <InputLabel htmlFor="phone" value="No. Telepon" />
-                <TextInput
-                    id="phone"
-                    type="text"
-                    value={data.phone}
-                    onChange={(e) => setData("phone", e.target.value)}
-                    className="mt-1 block w-full"
-                />
-                <InputError message={errors.phone} className="mt-2" />
-            </div>
-
-            {/* Email (Akun Login) */}
-            <div className="mb-4">
-                <InputLabel htmlFor="email" value="Email (Akun Login)" />
-                <TextInput
-                    id="email"
-                    type="email"
-                    value={data.email}
-                    onChange={(e) => setData("email", e.target.value)}
-                    className="mt-1 block w-full"
-                />
-                <InputError message={errors.email} className="mt-2" />
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* No Telepon */}
+                <div>
+                    <InputLabel htmlFor="phone" value="No. Telepon" />
+                    <TextInput
+                        id="phone"
+                        type="text"
+                        value={data.phone}
+                        onChange={(e) => setData("phone", e.target.value)}
+                        className="mt-1 block w-full"
+                    />
+                    <InputError message={errors.phone} className="mt-2" />
+                </div>
+                {/* Email (Akun Login) */}
+                <div>
+                    <InputLabel htmlFor="email" value="Email (Akun Login)" />
+                    <TextInput
+                        id="email"
+                        type="email"
+                        value={data.email}
+                        onChange={(e) => setData("email", e.target.value)}
+                        className="mt-1 block w-full"
+                    />
+                    <InputError message={errors.email} className="mt-2" />
+                </div>
             </div>
 
             <div className="mb-4">
@@ -183,7 +191,12 @@ const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
 };
 
 // --- Komponen Utama Index ---
-export default function GuardianIndex({ auth, guardians, students }) {
+export default function GuardianIndex({
+    auth,
+    guardians,
+    students,
+    filters = {},
+}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingGuardian, setEditingGuardian] = useState(null);
 
@@ -195,6 +208,18 @@ export default function GuardianIndex({ auth, guardians, students }) {
     const closeModal = () => {
         setEditingGuardian(null);
         setIsModalOpen(false);
+    };
+
+    const [search, setSearch] = useState(filters.search || "");
+
+    // 🔍 Filter
+    const handleFilter = (e) => {
+        e.preventDefault();
+        router.get(
+            route("admin.students.index"),
+            { search },
+            { preserveState: true, replace: true }
+        );
     };
 
     const handleDelete = (guardian) => {
@@ -221,16 +246,65 @@ export default function GuardianIndex({ auth, guardians, students }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div className="bg-white/90 backdrop-blur-md shadow-lg sm:rounded-2xl p-8 border border-gray-100">
                         {/* Tombol Tambah */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-semibold text-gray-700">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+                            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                                 Manajemen Wali Murid
                             </h3>
-                            <PrimaryButton onClick={() => openModal(null)}>
-                                Tambah Wali
+                            <PrimaryButton
+                                className="flex items-center gap-2 text-sm px-5 py-2.5"
+                                onClick={() => openModal(null)}
+                            >
+                                <FaPlusCircle /> Tambah Wali
                             </PrimaryButton>
                         </div>
+
+                        <form
+                            onSubmit={handleFilter}
+                            className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+                        >
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Cari Nama
+                                </label>
+                                <div className="relative mt-1">
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        placeholder="Cari santri..."
+                                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pl-10 text-sm"
+                                    />
+                                    <FaSearch className="absolute top-3 left-3 text-gray-400" />
+                                </div>
+                            </div>
+
+                            <div className="flex space-x-3 pt-6">
+                                <PrimaryButton
+                                    type="submit"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow-sm"
+                                >
+                                    <FaSearch /> Terapkan
+                                </PrimaryButton>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setClassFilter("");
+                                        setStatus("");
+                                        router.get(
+                                            route("admin.students.index")
+                                        );
+                                    }}
+                                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                >
+                                    <FaSyncAlt /> Reset
+                                </button>
+                            </div>
+                        </form>
 
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
@@ -263,8 +337,7 @@ export default function GuardianIndex({ auth, guardians, students }) {
                                                 {guardian.user?.name}
                                             </td>
                                             <td className="px-6 py-4">
-                                                {guardian.user?.email ||
-                                                    "N/A (User hilang)"}
+                                                {guardian.user?.email || "-"}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {guardian.phone || "-"}
@@ -280,6 +353,8 @@ export default function GuardianIndex({ auth, guardians, students }) {
                                                         openModal(guardian)
                                                     }
                                                 >
+                                                    <FaEdit className="mr-1" />
+                                                    {""}
                                                     Edit
                                                 </SecondaryButton>
                                                 <DangerButton
@@ -287,6 +362,7 @@ export default function GuardianIndex({ auth, guardians, students }) {
                                                         handleDelete(guardian)
                                                     }
                                                 >
+                                                    <FaTrash className="mr-1" />{" "}
                                                     Hapus
                                                 </DangerButton>
                                             </td>
