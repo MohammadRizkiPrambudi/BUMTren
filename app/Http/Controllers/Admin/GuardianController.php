@@ -19,7 +19,7 @@ class GuardianController extends Controller
     public function index()
     {
         $guardians = Guardian::with('user', 'students')->paginate(10);
-        $students  = Student::orderBy('name')->get(['id', 'name', 'nis']);
+        $students  = Student::orderBy('name')->get(['id', 'name', 'nisn']);
 
         return Inertia::render('Admin/Guardians/Index', [
             'guardians' => $guardians,
@@ -35,6 +35,7 @@ class GuardianController extends Controller
             'email'         => 'required|string|email|max:255|unique:users',
             'password'      => 'required|string|min:8|confirmed',
             'students_id'   => 'nullable|array',
+            'address'       => 'required',
             'students_id.*' => 'exists:students,id',
         ]);
 
@@ -51,7 +52,7 @@ class GuardianController extends Controller
 
             $guardian = Guardian::create([
                 'user_id' => $user->id,
-                'name'    => $request->name,
+                'address' => $request->address,
                 'phone'   => $request->phone,
             ]);
 

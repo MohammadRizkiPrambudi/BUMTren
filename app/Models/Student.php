@@ -13,7 +13,6 @@ class Student extends Model
         return $this->hasOne(ECardWallet::class);
     }
 
-    // Relasi Many-to-Many ke Wali Santri
     public function guardians()
     {
         return $this->belongsToMany(Guardian::class, 'student_guardian', 'student_id', 'guardian_id');

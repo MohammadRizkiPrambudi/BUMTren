@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\GuardianController as AdminGuardian;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StudentController;
@@ -34,7 +35,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class)->names('categories');
         Route::resource('stocks', StockController::class)->names('stocks');
         Route::resource('users', UserController::class)->names('users');
-        Route::resource('guardians', GuardianController::class)->names('guardians');
+        Route::resource('guardians', AdminGuardian::class)->names('guardians');
     });
 
     Route::get('/admin/product/search', [StockController::class, 'getProducts'])->name('admin.stocks.products.search');

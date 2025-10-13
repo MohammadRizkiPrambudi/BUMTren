@@ -47,21 +47,26 @@ const posItem = {
     route: "pos.index",
 };
 
+const GuardianItem = {
+    name: "Dashboard",
+    route: "guardian.dashboard",
+};
+
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
     const userRoles = user.roles ? user.roles.map((role) => role.name) : [];
 
-    console.log(userRoles);
-
     const isCashier = userRoles.includes("cashier");
     const isAdmin = userRoles.includes("admin");
+    const isGuardian = userRoles.includes("guardian");
     const isManager = userRoles.includes("manager");
 
     // Tampilkan menu administrasi penuh jika peran adalah admin atau manager
     const showAdminMenus = isAdmin || isManager;
     // Tampilkan tautan POS jika peran adalah kasir atau manager
     const showPosLink = isCashier || isManager;
+    const showGuardianLink = isGuardian;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
@@ -103,6 +108,16 @@ export default function AuthenticatedLayout({ header, children }) {
                                         active={isLinkActive(posItem)}
                                     >
                                         {posItem.name}
+                                    </NavLink>
+                                )}
+
+                                {showGuardianLink && (
+                                    <NavLink
+                                        key={GuardianItem.route}
+                                        href={route(GuardianItem.route)}
+                                        active={isLinkActive(GuardianItem)}
+                                    >
+                                        {GuardianItem.name}
                                     </NavLink>
                                 )}
 

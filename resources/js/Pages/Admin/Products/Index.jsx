@@ -61,7 +61,7 @@ export default function ProductIndex({ auth, products, success, error }) {
                             </h3>
                             <Link
                                 href={route("admin.products.create")}
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition duration-150"
+                                className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-md transition duration-150"
                             >
                                 + Tambah Produk
                             </Link>

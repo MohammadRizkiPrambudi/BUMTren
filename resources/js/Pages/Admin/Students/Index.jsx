@@ -2,6 +2,7 @@ import React from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import Swal from "sweetalert2"; // Asumsi Anda menggunakan SweetAlert2 untuk konfirmasi
+import PrimaryButton from "@/Components/PrimaryButton";
 
 export default function StudentIndex({ auth, students, success, error }) {
     // Fungsi untuk menghapus santri (DELETE request)
@@ -49,11 +50,8 @@ export default function StudentIndex({ auth, students, success, error }) {
                             <h3 className="text-2xl font-semibold text-gray-700">
                                 Daftar Santri
                             </h3>
-                            <Link
-                                href={route("admin.students.create")}
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition duration-150"
-                            >
-                                + Tambah Santri
+                            <Link href={route("admin.students.create")}>
+                                <PrimaryButton>Tambah Santri</PrimaryButton>
                             </Link>
                         </div>
 
