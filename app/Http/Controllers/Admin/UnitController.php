@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class UnitController extends Controller
@@ -17,19 +18,16 @@ class UnitController extends Controller
         ]);
     }
 
-    // --- CREATE (Tampilkan Form) ---
     public function create()
     {
         return Inertia::render('Admin/Units/Create');
     }
 
-    // --- STORE (Simpan Data Baru) ---
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'     => 'required|string|max:255|unique:units,name', // Nama Unit harus unik
             'location' => 'required|string|max:255',
-            // 'manager_name' => 'nullable|string|max:255',
         ]);
 
         Unit::create($validated + ['is_active' => true]);
@@ -46,14 +44,13 @@ class UnitController extends Controller
         ]);
     }
 
-    // --- UPDATE (Perbarui Data) ---
     public function update(Request $request, Unit $unit)
     {
         $validated = $request->validate([
             'name'      => ['required', 'string', 'max:255', Rule::unique('units', 'name')->ignore($unit->id)],
             'location'  => 'required|string|max:255',
-                                               // 'manager_name' => 'nullable|string|max:255',
-            'is_active' => 'required|boolean', // Untuk mengaktifkan/menonaktifkan unit
+
+            'is_active' => 'required|boolean',
         ]);
 
         $unit->update($validated);
@@ -62,7 +59,6 @@ class UnitController extends Controller
             ->with('success', 'Data unit usaha berhasil diperbarui.');
     }
 
-    // --- DELETE (Hapus Data) ---
     public function destroy(Unit $unit)
     {
 

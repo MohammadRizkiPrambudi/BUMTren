@@ -7,80 +7,153 @@ import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import Swal from "sweetalert2";
 import { Button } from "@headlessui/react";
+import {
+    FaEdit,
+    FaPlusCircle,
+    FaSearch,
+    FaSyncAlt,
+    FaTrash,
+} from "react-icons/fa";
+import SecondaryButton from "@/Components/SecondaryButton";
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
 
-export default function CategoryIndex({ auth, categories, success, error }) {
-    // State untuk form tambah/edit (Kita pakai useForm Inertia)
-    const { data, setData, post, put, processing, errors, reset } = useForm({
-        name: "",
-        description: "",
-        is_active: true,
+const CategoryForm = ({ initialData, categories, onClose, isEditing }) => {
+    const { data, setData, post, put, errors, processing, reset } = useForm({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        is_active: initialData.is_active ?? true,
     });
 
-    // State untuk modal
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [currentCategory, setCurrentCategory] = useState(null);
+    const submit = (e) => {
+        e.preventDefault();
+        const endpoint = isEditing
+            ? route("admin.categories.update", initialData.id)
+            : route("admin.categories.store");
 
-    // Buka Modal Tambah
-    const openCreateModal = () => {
-        setIsEditing(false);
-        reset(); // Reset form
-        setIsModalOpen(true);
+        // Menggunakan POST/PUT sesuai mode
+        const method = isEditing ? put : post;
+
+        method(endpoint, {
+            onSuccess: () => {
+                reset();
+                onClose();
+            },
+        });
     };
 
-    // Buka Modal Edit
-    const openEditModal = (category) => {
-        setIsEditing(true);
-        setCurrentCategory(category);
-        setData({
-            name: category.name,
-            description: category.description || "",
-            is_active: category.is_active,
-        });
+    return (
+        <form onSubmit={submit} className="p-6">
+            <h2 className="text-xl font-medium text-gray-900 mb-4">
+                {isEditing
+                    ? `Edit Kategori: ${initialData.name}`
+                    : "Tambah Kategori"}
+            </h2>
+
+            {/* Nama Usaha */}
+            <div className="mb-4">
+                <InputLabel htmlFor="name" value="Nama Kategori" />
+                <TextInput
+                    id="name"
+                    value={data.name}
+                    onChange={(e) => setData("name", e.target.value)}
+                    className="mt-1 block w-full"
+                    isFocused
+                />
+                <InputError message={errors.name} className="mt-2" />
+            </div>
+
+            {/* Lokasi */}
+            <div>
+                <InputLabel htmlFor="description" value="Deskripsi" />
+                <TextInput
+                    id="description"
+                    type="text"
+                    value={data.description}
+                    onChange={(e) => setData("description", e.target.value)}
+                    className="mt-1 block w-full"
+                />
+                <InputError message={errors.description} className="mt-2" />
+            </div>
+
+            {isEditing && (
+                <div className="mt-4">
+                    <InputLabel value="Status Kategori" />
+                    <select
+                        value={data.is_active ? 1 : 0}
+                        onChange={(e) =>
+                            setData("is_active", e.target.value == 1)
+                        }
+                        className="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        <option value={1}>Aktif</option>
+                        <option value={0}>Non-aktif</option>
+                    </select>
+                    <InputError message={errors.is_active} className="mt-2" />
+                </div>
+            )}
+
+            <div className="flex justify-end mt-8 gap-3">
+                <SecondaryButton onClick={onClose} className="mr-3">
+                    Batal
+                </SecondaryButton>
+                <PrimaryButton processing={processing}>
+                    {isEditing ? "Simpan Perubahan" : "Tambahkan Kategori"}
+                </PrimaryButton>
+            </div>
+        </form>
+    );
+};
+
+export default function CategoryIndex({
+    auth,
+    categories,
+    success,
+    error,
+    filters = {},
+}) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState(null);
+
+    const openModal = (category = null) => {
+        setEditingCategory(category);
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
+        setEditingCategory(null);
         setIsModalOpen(false);
-        setCurrentCategory(null);
-        reset();
     };
 
-    // Handler Submit Form
-    const submit = (e) => {
+    const [search, setSearch] = useState(filters.search || "");
+    const [status, setStatus] = useState(filters.status || "");
+
+    // Filter
+    const handleFilter = (e) => {
         e.preventDefault();
-        if (isEditing) {
-            put(route("admin.categories.update", currentCategory.id), {
-                onSuccess: () => {
-                    closeModal();
-                    Swal.fire("Berhasil!", "Kategori diperbarui.", "success");
-                },
-                onError: () =>
-                    Swal.fire("Gagal!", "Periksa kembali input Anda.", "error"),
-            });
-        } else {
-            post(route("admin.categories.store"), {
-                onSuccess: () => {
-                    closeModal();
-                    Swal.fire(
-                        "Berhasil!",
-                        "Kategori baru ditambahkan.",
-                        "success"
-                    );
-                },
-                onError: () =>
-                    Swal.fire("Gagal!", "Periksa kembali input Anda.", "error"),
-            });
-        }
+        router.get(
+            route("admin.categories.index"),
+            { search, status },
+            { preserveState: true, replace: true }
+        );
     };
 
-    // Notifikasi Flash dari Controller
-    if (success) {
-        Swal.fire("Berhasil!", success, "success");
-    }
-    if (error) {
-        Swal.fire("Gagal!", error, "error");
-    }
+    const handleDelete = (category) => {
+        Swal.fire({
+            title: `Hapus ${category.name}?`,
+            text: "Hapus Kategori!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route("admin.categories.destroy", unit.id));
+            }
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -95,20 +168,81 @@ export default function CategoryIndex({ auth, categories, success, error }) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    <div className="bg-white/90 backdrop-blur-md shadow-lg sm:rounded-2xl p-8 border border-gray-100">
                         {/* Header dan Tombol Tambah */}
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-semibold text-gray-700">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+                            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                                 Daftar Kategori
                             </h3>
 
-                            <Button
-                                onClick={openCreateModal}
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded transition duration-150"
+                            <PrimaryButton
+                                onClick={() => openModal(null)}
+                                className="flex items-center gap-2 text-sm px-5 py-2.5"
                             >
-                                + Tambah Kategori
-                            </Button>
+                                <FaPlusCircle /> Tambah Kategori
+                            </PrimaryButton>
                         </div>
+
+                        <form
+                            onSubmit={handleFilter}
+                            className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+                        >
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Cari Nama Usaha
+                                </label>
+                                <div className="relative mt-1">
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        placeholder="Cari santri..."
+                                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pl-10 text-sm"
+                                    />
+                                    <FaSearch className="absolute top-3 left-3 text-gray-400" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Status
+                                </label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="">Semua</option>
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Non-Aktif</option>
+                                </select>
+                            </div>
+
+                            <div className="flex space-x-3 pt-6">
+                                <PrimaryButton
+                                    type="submit"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow-sm"
+                                >
+                                    <FaSearch /> Terapkan
+                                </PrimaryButton>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setClassFilter("");
+                                        setStatus("");
+                                        router.get(
+                                            route("admin.students.index")
+                                        );
+                                    }}
+                                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                >
+                                    <FaSyncAlt /> Reset
+                                </button>
+                            </div>
+                        </form>
 
                         {/* Tabel Daftar Kategori */}
                         <div className="overflow-x-auto">
@@ -151,17 +285,24 @@ export default function CategoryIndex({ auth, categories, success, error }) {
                                                         : "Non-aktif"}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <button
+                                            <td className="px-6 py-4 space-x-2 text-center">
+                                                <SecondaryButton
                                                     onClick={() =>
-                                                        openEditModal(category)
+                                                        openModal(category)
                                                     }
-                                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
                                                 >
-                                                    Edit
-                                                </button>
+                                                    <FaEdit className="mr-1" />
+                                                    {""} Edit
+                                                </SecondaryButton>
                                                 {/* Hapus harus menggunakan konfirmasi dan Inertia delete request */}
-                                                {/* <button onClick={() => handleDelete(category)} className="text-red-600 hover:text-red-900">Hapus</button> */}
+                                                <DangerButton
+                                                    onClick={() =>
+                                                        handleDelete(category)
+                                                    }
+                                                >
+                                                    <FaTrash className="mr-1" />
+                                                    {""} Hapus
+                                                </DangerButton>
                                             </td>
                                         </tr>
                                     ))}
@@ -173,102 +314,14 @@ export default function CategoryIndex({ auth, categories, success, error }) {
                 </div>
             </div>
 
-            {/* Modal Tambah/Edit Kategori */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                        <h4 className="text-xl font-bold mb-4">
-                            {isEditing
-                                ? "Edit Kategori"
-                                : "Tambah Kategori Baru"}
-                        </h4>
-                        <form onSubmit={submit}>
-                            <div className="mt-4">
-                                <InputLabel
-                                    htmlFor="name"
-                                    value="Nama Kategori"
-                                />
-                                <TextInput
-                                    id="name"
-                                    type="text"
-                                    value={data.name}
-                                    className="mt-1 block w-full"
-                                    onChange={(e) =>
-                                        setData("name", e.target.value)
-                                    }
-                                    required
-                                />
-                                <InputError
-                                    message={errors.name}
-                                    className="mt-2"
-                                />
-                            </div>
-
-                            <div className="mt-4">
-                                <InputLabel
-                                    htmlFor="description"
-                                    value="Deskripsi (Opsional)"
-                                />
-                                <textarea
-                                    id="description"
-                                    value={data.description}
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                    rows="3"
-                                    onChange={(e) =>
-                                        setData("description", e.target.value)
-                                    }
-                                ></textarea>
-                                <InputError
-                                    message={errors.description}
-                                    className="mt-2"
-                                />
-                            </div>
-
-                            {isEditing && (
-                                <div className="mt-4">
-                                    <InputLabel
-                                        htmlFor="is_active"
-                                        value="Status"
-                                    />
-                                    <select
-                                        id="is_active"
-                                        value={data.is_active ? 1 : 0}
-                                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                        onChange={(e) =>
-                                            setData(
-                                                "is_active",
-                                                e.target.value == 1
-                                            )
-                                        }
-                                    >
-                                        <option value={1}>Aktif</option>
-                                        <option value={0}>Non-aktif</option>
-                                    </select>
-                                    <InputError
-                                        message={errors.is_active}
-                                        className="mt-2"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex items-center justify-end mt-6">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="text-gray-600 hover:text-gray-900 mr-4"
-                                >
-                                    Batal
-                                </button>
-                                <PrimaryButton disabled={processing}>
-                                    {isEditing
-                                        ? "Simpan Perubahan"
-                                        : "Tambahkan Kategori"}
-                                </PrimaryButton>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <Modal show={isModalOpen} onClose={closeModal}>
+                <CategoryForm
+                    initialData={editingCategory || { categories: [] }}
+                    categories={categories}
+                    onClose={closeModal}
+                    isEditing={!!editingCategory}
+                />
+            </Modal>
         </AuthenticatedLayout>
     );
 }

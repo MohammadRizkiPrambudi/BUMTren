@@ -16,6 +16,7 @@ import {
     FaSyncAlt,
     FaTrash,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -212,7 +213,7 @@ export default function GuardianIndex({
 
     const [search, setSearch] = useState(filters.search || "");
 
-    // 🔍 Filter
+    // Filter
     const handleFilter = (e) => {
         e.preventDefault();
         router.get(
@@ -223,14 +224,20 @@ export default function GuardianIndex({
     };
 
     const handleDelete = (guardian) => {
-        const isConfirmed = confirm(
-            `Apakah Anda yakin ingin menghapus Wali: ${guardian.name}? Akun login juga akan terhapus.`
-        );
-        if (isConfirmed) {
-            router.delete(route("admin.guardians.destroy", guardian.id), {
-                onSuccess: () => alert("Wali berhasil dihapus."),
-            });
-        }
+        Swal.fire({
+            title: `Hapus ${guardian?.user?.name}?`,
+            text: "Apakah Anda yakin ingin menghapus Wali",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(route("admin.guardians.destroy", guardian.id));
+            }
+        });
     };
 
     return (
