@@ -16,6 +16,7 @@ import {
     FaSyncAlt,
 } from "react-icons/fa";
 import FormatRupiah from "@/Pages/Utils/FormatRupiah";
+import Pagination from "@/Components/Pagination";
 
 const StudentForm = ({ onClose, initialData = {}, isEditing = false }) => {
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -163,15 +164,14 @@ export default function StudentIndex({ auth, students, filters = {} }) {
     const [editingStudent, setEditingStudent] = useState(null);
 
     const [search, setSearch] = useState(filters.search || "");
-    const [classFilter, setClassFilter] = useState(filters.class || "");
     const [status, setStatus] = useState(filters.status || "");
 
-    // 🔍 Filter
+    // Filter
     const handleFilter = (e) => {
         e.preventDefault();
         router.get(
             route("admin.students.index"),
-            { search, class: classFilter, status },
+            { search, status },
             { preserveState: true, replace: true }
         );
     };
@@ -232,11 +232,11 @@ export default function StudentIndex({ auth, students, filters = {} }) {
                         {/* FILTER SECTION */}
                         <form
                             onSubmit={handleFilter}
-                            className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+                            className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
                         >
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700">
-                                    Cari Nama
+                                    Cari Nama / Kelas
                                 </label>
                                 <div className="relative mt-1">
                                     <input
@@ -250,21 +250,6 @@ export default function StudentIndex({ auth, students, filters = {} }) {
                                     />
                                     <FaSearch className="absolute top-3 left-3 text-gray-400" />
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700">
-                                    Kelas
-                                </label>
-                                <input
-                                    type="text"
-                                    value={classFilter}
-                                    onChange={(e) =>
-                                        setClassFilter(e.target.value)
-                                    }
-                                    placeholder="Contoh: XII IPA"
-                                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                                />
                             </div>
 
                             <div>
@@ -293,7 +278,6 @@ export default function StudentIndex({ auth, students, filters = {} }) {
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
                                         setStatus("");
                                         router.get(
                                             route("admin.students.index")
@@ -334,75 +318,98 @@ export default function StudentIndex({ auth, students, filters = {} }) {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {students.data.map((student) => (
-                                        <tr
-                                            key={student.id}
-                                            className="hover:bg-gray-50"
-                                        >
-                                            <td className="px-6 py-4 text-gray-800 font-medium">
-                                                {student.name}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {student.class}
-                                            </td>
-                                            <td className="px-6 py-4 font-mono text-sm text-gray-600">
-                                                {student.card_uid}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-semibold text-indigo-600">
-                                                {student.wallet
-                                                    ? FormatRupiah(
-                                                          Number(
-                                                              student.wallet
-                                                                  .current_balance
+                                    {students.data.length > 0 ? (
+                                        students.data.map((student) => (
+                                            <tr
+                                                key={student.id}
+                                                className="hover:bg-gray-50"
+                                            >
+                                                <td className="px-6 py-4 text-gray-800 font-medium">
+                                                    {student.name}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {student.class}
+                                                </td>
+                                                <td className="px-6 py-4 font-mono text-sm text-gray-600">
+                                                    {student.card_uid}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-semibold text-indigo-600">
+                                                    {student.wallet
+                                                        ? FormatRupiah(
+                                                              Number(
+                                                                  student.wallet
+                                                                      .current_balance
+                                                              )
                                                           )
-                                                      )
-                                                    : "0"}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-semibold text-red-600">
-                                                {student.wallet
-                                                    ? FormatRupiah(
-                                                          Number(
-                                                              student.daily_limit
+                                                        : "0"}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-semibold text-red-600">
+                                                    {student.wallet
+                                                        ? FormatRupiah(
+                                                              Number(
+                                                                  student.daily_limit
+                                                              )
                                                           )
-                                                      )
-                                                    : "0"}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span
-                                                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                                                        student.is_active
-                                                            ? "bg-green-100 text-green-700"
-                                                            : "bg-red-100 text-red-700"
-                                                    }`}
-                                                >
-                                                    {student.is_active
-                                                        ? "Aktif"
-                                                        : "Non-aktif"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 flex justify-center gap-2">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openModal(student)
-                                                    }
-                                                >
-                                                    <FaEdit className="mr-1" />{" "}
-                                                    Edit
-                                                </SecondaryButton>
-                                                <DangerButton
-                                                    onClick={() =>
-                                                        handleDelete(student)
-                                                    }
-                                                >
-                                                    <FaTrashAlt className="mr-1" />{" "}
-                                                    Hapus
-                                                </DangerButton>
+                                                        : "0"}
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span
+                                                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                                                            student.is_active
+                                                                ? "bg-green-100 text-green-700"
+                                                                : "bg-red-100 text-red-700"
+                                                        }`}
+                                                    >
+                                                        {student.is_active
+                                                            ? "Aktif"
+                                                            : "Non-aktif"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 flex justify-center gap-2">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openModal(student)
+                                                        }
+                                                    >
+                                                        <FaEdit className="mr-1" />{" "}
+                                                        Edit
+                                                    </SecondaryButton>
+                                                    <DangerButton
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                student
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaTrashAlt className="mr-1" />{" "}
+                                                        Hapus
+                                                    </DangerButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search ||
+                                                filters.status
+                                                    ? `Tidak ada siswa ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data siswa yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
+                        {/* Pagination */}
+                        <Pagination
+                            links={students.links}
+                            from={students.from}
+                            to={students.to}
+                            total={students.total}
+                        />
                     </div>
                 </div>
             </div>

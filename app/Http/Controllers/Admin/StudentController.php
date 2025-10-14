@@ -11,13 +11,34 @@ use Inertia\Inertia;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::with('wallet')->paginate(10); // Ambil 10 data beserta saldo
+        $filters      = $request->all(['search', 'status']);
+        $searchQuery  = $filters['search'] ?? null;
+        $statusFilter = $filters['status'] ?? null;
+
+        // Mulai query Eloquent
+        $students = Student::with('wallet')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('class', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($statusFilter !== '' && $statusFilter !== null, function ($query) use ($statusFilter) {
+                if ($statusFilter === '1') {
+                    $query->where('is_active', true);
+                } elseif ($statusFilter === '0') {
+                    $query->where('is_active', false);
+                }
+            })
+            ->latest()
+            ->paginate(1)
+            ->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
             'students' => $students,
-            'filters'  => request()->all(['search', 'trashed']), // Untuk filter di React
+            'filters'  => $filters,
         ]);
     }
 
