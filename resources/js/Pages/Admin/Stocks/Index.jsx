@@ -6,6 +6,13 @@ import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import Swal from "sweetalert2";
+import {
+    FaExchangeAlt,
+    FaPlusCircle,
+    FaSearch,
+    FaSyncAlt,
+} from "react-icons/fa";
+import SecondaryButton from "@/Components/SecondaryButton";
 
 export default function StockIndex({
     auth,
@@ -13,13 +20,14 @@ export default function StockIndex({
     units,
     success,
     error,
+    filters = {},
 }) {
     // Form untuk Tambah Stok Awal
     const { data, setData, post, processing, errors, reset } = useForm({
         unit_id: "",
         product_id: "",
-        quantity: 0, // Disesuaikan dengan migrasi Anda
-        low_stock_threshold: 10, // Default nilai awal
+        quantity: 0,
+        low_stock_threshold: 10,
     });
 
     // State UI
@@ -30,6 +38,19 @@ export default function StockIndex({
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [search, setSearch] = useState(filters.search || "");
+    const [unitFilter, setUnitFilter] = useState(filters.class || "");
+    const [status, setStatus] = useState(filters.status || "");
+
+    // Filter
+    const handleFilter = (e) => {
+        e.preventDefault();
+        router.get(
+            route("admin.stocks.index"),
+            { search, unit: unitFilter },
+            { preserveState: true, replace: true }
+        );
+    };
 
     // Fetch Products based on search term (Debounced)
     useEffect(() => {
@@ -69,7 +90,6 @@ export default function StockIndex({
         reset();
     };
 
-    // Handler Submit Form Tambah Stok Awal
     const submitCreate = (e) => {
         e.preventDefault();
         post(route("admin.stocks.store"), {
@@ -82,7 +102,6 @@ export default function StockIndex({
                 );
             },
             onError: (err) => {
-                // Gunakan error message dari controller jika ada
                 const message =
                     err.product_id ||
                     "Terjadi kesalahan. Pastikan produk belum terdaftar di unit ini.";
@@ -91,7 +110,6 @@ export default function StockIndex({
         });
     };
 
-    // --- Edit Threshold/Kuantitas Modal ---
     const openEditModal = (stock) => {
         setCurrentStock(stock);
         setData({
@@ -103,38 +121,11 @@ export default function StockIndex({
 
     const submitEdit = (e) => {
         e.preventDefault();
-        router.put(
-            route("admin.stocks.update", currentStock.id),
-            {
-                quantity: data.quantity,
-                low_stock_threshold: data.low_stock_threshold,
-            },
-            {
-                onSuccess: () => {
-                    closeAllModals();
-                    Swal.fire(
-                        "Berhasil!",
-                        "Stok dan Threshold diperbarui.",
-                        "success"
-                    );
-                },
-                onError: () =>
-                    Swal.fire(
-                        "Gagal!",
-                        "Terjadi kesalahan saat update.",
-                        "error"
-                    ),
-            }
-        );
+        router.put(route("admin.stocks.update", currentStock.id), {
+            quantity: data.quantity,
+            low_stock_threshold: data.low_stock_threshold,
+        });
     };
-
-    // Notifikasi Flash
-    if (success) {
-        Swal.fire("Berhasil!", success, "success");
-    }
-    if (error) {
-        Swal.fire("Gagal!", error, "error");
-    }
 
     return (
         <AuthenticatedLayout
@@ -149,15 +140,104 @@ export default function StockIndex({
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-semibold text-gray-700">
+                    <div className="bg-white/90 backdrop-blur-md shadow-lg sm:rounded-2xl p-8 border border-gray-100">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+                            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                                 Persediaan Produk di Setiap Unit
                             </h3>
-                            <PrimaryButton onClick={openCreateModal}>
-                                + Tambah Stok Awal
+                            <PrimaryButton
+                                className="flex items-center gap-2 text-sm px-5 py-2.5"
+                                onClick={openCreateModal}
+                            >
+                                <FaPlusCircle /> Tambah Stok Awal
                             </PrimaryButton>
                         </div>
+
+                        <form
+                            onSubmit={handleFilter}
+                            className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+                        >
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Cari Nama
+                                </label>
+                                <div className="relative mt-1">
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        placeholder="Cari produk..."
+                                        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pl-10 text-sm"
+                                    />
+                                    <FaSearch className="absolute top-3 left-3 text-gray-400" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Unit Usaha
+                                </label>
+                                <select
+                                    id="unit_id"
+                                    name="unit_id"
+                                    value={unitFilter}
+                                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                    onChange={(e) =>
+                                        setUnitFilter(e.target.value)
+                                    }
+                                    required
+                                >
+                                    <option value="">
+                                        -- Pilih Unit Usaha --
+                                    </option>
+                                    {Object.entries(units).map(([id, name]) => (
+                                        <option key={id} value={id}>
+                                            {name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700">
+                                    Status
+                                </label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="">Semua</option>
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Non-Aktif</option>
+                                </select>
+                            </div>
+
+                            <div className="flex space-x-3 pt-6">
+                                <PrimaryButton
+                                    type="submit"
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 px-4 py-2 rounded-lg text-sm shadow-sm"
+                                >
+                                    <FaSearch /> Terapkan
+                                </PrimaryButton>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearch("");
+                                        setClassFilter("");
+                                        setStatus("");
+                                        router.get(
+                                            route("admin.products.index")
+                                        );
+                                    }}
+                                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                >
+                                    <FaSyncAlt /> Reset
+                                </button>
+                            </div>
+                        </form>
 
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
@@ -210,7 +290,7 @@ export default function StockIndex({
                                                 {stock.quantity <=
                                                     stock.low_stock_threshold && (
                                                     <span className="ml-2 text-red-600 text-xs font-normal">
-                                                        ⚠️ Kritis
+                                                        <FaExchangeAlt /> Kritis
                                                     </span>
                                                 )}
                                             </td>
@@ -218,21 +298,19 @@ export default function StockIndex({
                                                 {stock.low_stock_threshold}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <button
+                                                <SecondaryButton
                                                     onClick={() =>
                                                         openEditModal(stock)
                                                     }
-                                                    className="text-blue-600 hover:text-blue-900 mr-3"
                                                 >
                                                     Edit Stok/Batas
-                                                </button>
+                                                </SecondaryButton>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-
                         {/* ... Pagination ... */}
                     </div>
                 </div>

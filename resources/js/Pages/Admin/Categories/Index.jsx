@@ -198,7 +198,7 @@ export default function CategoryIndex({
                                         onChange={(e) =>
                                             setSearch(e.target.value)
                                         }
-                                        placeholder="Cari santri..."
+                                        placeholder="Cari kategori..."
                                         className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pl-10 text-sm"
                                     />
                                     <FaSearch className="absolute top-3 left-3 text-gray-400" />
