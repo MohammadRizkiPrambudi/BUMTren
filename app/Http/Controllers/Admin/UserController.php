@@ -9,28 +9,46 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
-// Import Model Role Spatie
-
 class UserController extends Controller
 {
-    // --- READ (Index) ---
-    public function index()
+
+    public function index(Request $request)
     {
-        $users = User::with('roles:id,name', 'unit:id,name') // Load roles dan unit
+
+        $filters     = $request->all(['search', 'role']);
+        $searchQuery = $filters['search'] ?? null;
+        $roleFilter  = $filters['role'] ?? null;
+
+        $users = User::with('roles:id,name', 'unit:id,name')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($roleFilter, function ($query, $roleId) {
+                if (is_numeric($roleId)) {
+                    $query->whereHas('roles', function ($q) use ($roleId) {
+                        $q->where('roles.id', $roleId);
+                    });
+                }
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
+
+        $roles = Role::pluck('name', 'id');
 
         return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
+            'users'   => $users,
+            'roles'   => $roles,
+            'filters' => $filters,
         ]);
     }
 
-    // --- CREATE (Tampilkan Form) ---
     public function create()
     {
-        $roles = Role::pluck('name', 'id'); // Ambil semua peran
-                                            // $units = Unit::where('is_active', true)->pluck('name', 'id'); // Ambil unit aktif
-        $units = Unit::pluck('name', 'id'); // Ambil unit aktif
+        $roles = Role::pluck('name', 'id');
+        $units = Unit::where('is_active', true)->pluck('name', 'id');
 
         return Inertia::render('Admin/Users/Create', [
             'roles' => $roles,

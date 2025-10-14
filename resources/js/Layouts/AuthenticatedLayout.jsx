@@ -25,15 +25,15 @@ const adminMenuGroups = [
             { name: "Stok Unit", route: "admin.stocks.index" },
         ],
     },
-    // {
-    //     group: "Manajemen Pengguna",
-    //     defaultRoute: "admin.users.index",
-    //     items: [
-    //         { name: "Pengguna", route: "admin.users.index" },
-    //         { name: "Role", route: "admin.roles.index" },
-    //         { name: "Permission", route: "admin.permissions.index" },
-    //     ],
-    // },
+    {
+        group: "Manajemen Pengguna",
+        defaultRoute: "admin.users.index",
+        items: [
+            { name: "Pengguna", route: "admin.users.index" },
+            // { name: "Role", route: "admin.roles.index" },
+            // { name: "Permission", route: "admin.permissions.index" },
+        ],
+    },
 ];
 
 const posItem = { name: "Aplikasi POS", route: "pos.index" };
