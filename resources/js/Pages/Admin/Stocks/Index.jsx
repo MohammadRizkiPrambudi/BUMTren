@@ -13,6 +13,7 @@ import {
     FaSyncAlt,
 } from "react-icons/fa";
 import SecondaryButton from "@/Components/SecondaryButton";
+import Pagination from "@/Components/Pagination";
 
 export default function StockIndex({
     auth,
@@ -40,7 +41,6 @@ export default function StockIndex({
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [search, setSearch] = useState(filters.search || "");
     const [unitFilter, setUnitFilter] = useState(filters.class || "");
-    const [status, setStatus] = useState(filters.status || "");
 
     // Filter
     const handleFilter = (e) => {
@@ -155,7 +155,7 @@ export default function StockIndex({
 
                         <form
                             onSubmit={handleFilter}
-                            className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
+                            className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200"
                         >
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700">
@@ -187,31 +187,13 @@ export default function StockIndex({
                                     onChange={(e) =>
                                         setUnitFilter(e.target.value)
                                     }
-                                    required
                                 >
-                                    <option value="">
-                                        -- Pilih Unit Usaha --
-                                    </option>
+                                    <option value="">Semua</option>
                                     {Object.entries(units).map(([id, name]) => (
                                         <option key={id} value={id}>
                                             {name}
                                         </option>
                                     ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700">
-                                    Status
-                                </label>
-                                <select
-                                    value={status}
-                                    onChange={(e) => setStatus(e.target.value)}
-                                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                                >
-                                    <option value="">Semua</option>
-                                    <option value="1">Aktif</option>
-                                    <option value="0">Non-Aktif</option>
                                 </select>
                             </div>
 
@@ -226,11 +208,8 @@ export default function StockIndex({
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
-                                        setStatus("");
-                                        router.get(
-                                            route("admin.products.index")
-                                        );
+                                        setUnitFilter("");
+                                        router.get(route("admin.stocks.index"));
                                     }}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                 >
@@ -264,54 +243,73 @@ export default function StockIndex({
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {unitStocks.data.map((stock) => (
-                                        <tr
-                                            key={stock.id}
-                                            className={
-                                                stock.quantity <=
-                                                stock.low_stock_threshold
-                                                    ? "bg-red-50 hover:bg-red-100"
-                                                    : "hover:bg-gray-50"
-                                            }
-                                        >
-                                            <td className="px-6 py-4 whitespace-nowrap font-semibold text-indigo-700">
-                                                {stock.unit.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {stock.product.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                                                {stock.product.sku || "-"}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center text-lg font-bold">
-                                                {stock.quantity.toLocaleString(
-                                                    "id-ID"
-                                                )}
-                                                {stock.quantity <=
-                                                    stock.low_stock_threshold && (
-                                                    <span className="ml-2 text-red-600 text-xs font-normal">
-                                                        <FaExchangeAlt /> Kritis
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
-                                                {stock.low_stock_threshold}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openEditModal(stock)
-                                                    }
-                                                >
-                                                    Edit Stok/Batas
-                                                </SecondaryButton>
+                                    {unitStocks.data.length > 0 ? (
+                                        unitStocks.data.map((stock) => (
+                                            <tr
+                                                key={stock.id}
+                                                className={
+                                                    stock.quantity <=
+                                                    stock.low_stock_threshold
+                                                        ? "bg-red-50 hover:bg-red-100"
+                                                        : "hover:bg-gray-50"
+                                                }
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap font-semibold text-indigo-700">
+                                                    {stock.unit.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {stock.product.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                                                    {stock.product.sku || "-"}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center text-lg font-bold">
+                                                    {stock.quantity.toLocaleString(
+                                                        "id-ID"
+                                                    )}
+                                                    {stock.quantity <=
+                                                        stock.low_stock_threshold && (
+                                                        <span className="ml-2 text-red-600 text-xs font-normal">
+                                                            <FaExchangeAlt />{" "}
+                                                            Kritis
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                                    {stock.low_stock_threshold}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openEditModal(stock)
+                                                        }
+                                                    >
+                                                        Edit Stok/Batas
+                                                    </SecondaryButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search || filters.unit
+                                                    ? `Tidak ada stok produk ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data stok produk yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-                        {/* ... Pagination ... */}
+                        <Pagination
+                            links={unitStocks.links}
+                            from={unitStocks.from}
+                            to={unitStocks.to}
+                            total={unitStocks.total}
+                        />
                     </div>
                 </div>
             </div>

@@ -10,22 +10,39 @@ use Inertia\Inertia;
 
 class StockController extends Controller
 {
-    // --- Index: Melihat Daftar Stok ---
-    public function index()
+
+    public function index(Request $request)
     {
-        $unitStocks = UnitStock::with(['unit', 'product'])
+        $filters     = $request->all(['search', 'unit']);
+        $searchQuery = $filters['search'] ?? null;
+        $unitFilter  = $filters['unit'] ?? null;
+        $unitStocks  = UnitStock::with(['unit', 'product'])
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('product', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->when($unitFilter, function ($query, $unitId) {
+                if (is_numeric($unitId)) {
+                    $query->whereHas('unit', function ($q) use ($unitId) {
+                        $q->where('unit_id', $unitId);
+                    });
+                }
+            })
             ->latest()
-            ->paginate(15);
+            ->paginate(10)->withQueryString();
 
         $units = Unit::pluck('name', 'id');
 
         return Inertia::render('Admin/Stocks/Index', [
             'unitStocks' => $unitStocks,
             'units'      => $units,
+            'filters'    => $filters,
         ]);
     }
 
-    // --- Store: Menambahkan Stok Awal (Mengaitkan Produk ke Unit) ---
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -35,37 +52,32 @@ class StockController extends Controller
             'low_stock_threshold' => 'required|integer|min:0', // Kolom baru Anda
         ]);
 
-        // Cek duplikasi (sesuai kunci unik di migrasi)
         if (UnitStock::where('unit_id', $validated['unit_id'])
             ->where('product_id', $validated['product_id'])
             ->exists()) {
             return redirect()->back()->withErrors(['product_id' => 'Produk ini sudah terdaftar di stok unit yang dipilih. Gunakan tombol edit untuk memperbarui kuantitas.']);
         }
 
-        // Asumsi: Anda menambahkan 'user_id' di migrasi untuk audit. Jika tidak, hapus `+ ['user_id' => auth()->id()]`
         UnitStock::create($validated + ['user_id' => auth()->id()]);
 
         return redirect()->route('admin.stocks.index')
             ->with('success', 'Stok awal produk berhasil ditambahkan ke unit.');
     }
 
-                                                               // --- Update: Memperbarui Kuantitas Stok yang Sudah Ada ---
-    public function update(Request $request, UnitStock $stock) // Mengganti $unitStock menjadi $stock
+    public function update(Request $request, UnitStock $stock)
     {
-        // Update cepat kuantitas dan/atau threshold dari modal/aksi cepat
+
         $validated = $request->validate([
-            'quantity'            => 'sometimes|required|integer|min:0', // Hanya jika ada input quantity
-            'low_stock_threshold' => 'sometimes|required|integer|min:0', // Hanya jika ada input threshold
+            'quantity'            => 'sometimes|required|integer|min:0',
+            'low_stock_threshold' => 'sometimes|required|integer|min:0',
         ]);
 
-        // Tambahkan user_id untuk audit
         $stock->update($validated + ['user_id' => auth()->id()]);
 
         return redirect()->route('admin.stocks.index')
             ->with('success', 'Kuantitas stok berhasil diperbarui.');
     }
 
-    // Metode untuk mengambil daftar produk (tetap sama)
     public function getProducts(Request $request)
     {
         $query    = $request->get('query');
