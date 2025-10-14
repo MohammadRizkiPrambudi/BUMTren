@@ -97,7 +97,7 @@ const CategoryForm = ({ initialData, categories, onClose, isEditing }) => {
                 <SecondaryButton onClick={onClose} className="mr-3">
                     Batal
                 </SecondaryButton>
-                <PrimaryButton processing={processing}>
+                <PrimaryButton disabled={processing}>
                     {isEditing ? "Simpan Perubahan" : "Tambahkan Kategori"}
                 </PrimaryButton>
             </div>

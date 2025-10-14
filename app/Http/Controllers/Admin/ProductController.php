@@ -12,10 +12,12 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->latest()->paginate(10);
+        $products   = Product::with('category')->latest()->paginate(10);
+        $categories = Category::pluck('name', 'id');
 
         return Inertia::render('Admin/Products/Index', [
-            'products' => $products,
+            'products'   => $products,
+            'categories' => $categories,
         ]);
     }
 

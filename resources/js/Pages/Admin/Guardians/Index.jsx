@@ -183,7 +183,7 @@ const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
                 <SecondaryButton onClick={onClose} className="mr-3">
                     Batal
                 </SecondaryButton>
-                <PrimaryButton processing={processing}>
+                <PrimaryButton disabled={processing}>
                     {isEditing ? "Simpan Perubahan" : "Tambahkan Wali"}
                 </PrimaryButton>
             </div>
@@ -191,7 +191,6 @@ const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
     );
 };
 
-// --- Komponen Utama Index ---
 export default function GuardianIndex({
     auth,
     guardians,
