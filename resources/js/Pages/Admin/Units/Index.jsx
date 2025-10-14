@@ -16,6 +16,7 @@ import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import SecondaryButton from "@/Components/SecondaryButton";
 import DangerButton from "@/Components/DangerButton";
+import Pagination from "@/Components/Pagination";
 
 const UnitForm = ({ initialData, units, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -131,7 +132,7 @@ export default function UnitIndex({
     const handleFilter = (e) => {
         e.preventDefault();
         router.get(
-            route("admin.students.index"),
+            route("admin.units.index"),
             { search, status },
             { preserveState: true, replace: true }
         );
@@ -228,11 +229,8 @@ export default function UnitIndex({
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
                                         setStatus("");
-                                        router.get(
-                                            route("admin.students.index")
-                                        );
+                                        router.get(route("admin.units.index"));
                                     }}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                                 >
@@ -260,54 +258,73 @@ export default function UnitIndex({
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {units.data.map((unit) => (
-                                        <tr key={unit.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap font-semibold">
-                                                {unit.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {unit.location}
-                                            </td>
+                                    {units.data.length > 0 ? (
+                                        units.data.map((unit) => (
+                                            <tr key={unit.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                                                    {unit.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {unit.location}
+                                                </td>
 
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        unit.is_active
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                    }`}
-                                                >
-                                                    {unit.is_active
-                                                        ? "Aktif"
-                                                        : "Non-aktif"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 space-x-2 text-center">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openModal(unit)
-                                                    }
-                                                >
-                                                    <FaEdit className="mr-1" />
-                                                    {""}
-                                                    Edit
-                                                </SecondaryButton>
-                                                <DangerButton
-                                                    onClick={() =>
-                                                        handleDelete(unit)
-                                                    }
-                                                >
-                                                    <FaTrash className="mr-1" />{" "}
-                                                    Hapus
-                                                </DangerButton>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span
+                                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                            unit.is_active
+                                                                ? "bg-green-100 text-green-800"
+                                                                : "bg-red-100 text-red-800"
+                                                        }`}
+                                                    >
+                                                        {unit.is_active
+                                                            ? "Aktif"
+                                                            : "Non-aktif"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 space-x-2 text-center">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openModal(unit)
+                                                        }
+                                                    >
+                                                        <FaEdit className="mr-1" />
+                                                        {""}
+                                                        Edit
+                                                    </SecondaryButton>
+                                                    <DangerButton
+                                                        onClick={() =>
+                                                            handleDelete(unit)
+                                                        }
+                                                    >
+                                                        <FaTrash className="mr-1" />{" "}
+                                                        Hapus
+                                                    </DangerButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="4"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search ||
+                                                filters.status
+                                                    ? `Tidak ada unit usaha ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data unit usaha yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {/* Tambahkan Pagination di sini */}
+                        <Pagination
+                            links={units.links}
+                            from={units.from}
+                            to={units.to}
+                            total={units.total}
+                        />
                     </div>
                 </div>
             </div>
