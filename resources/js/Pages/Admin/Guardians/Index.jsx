@@ -17,6 +17,7 @@ import {
     FaTrash,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import Pagination from "@/Components/Pagination";
 
 const GuardianForm = ({ initialData, students, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -216,7 +217,7 @@ export default function GuardianIndex({
     const handleFilter = (e) => {
         e.preventDefault();
         router.get(
-            route("admin.students.index"),
+            route("admin.guardians.index"),
             { search },
             { preserveState: true, replace: true }
         );
@@ -272,7 +273,7 @@ export default function GuardianIndex({
                         >
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700">
-                                    Cari Nama
+                                    Cari Nama Santri/Wali
                                 </label>
                                 <div className="relative mt-1">
                                     <input
@@ -299,10 +300,8 @@ export default function GuardianIndex({
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
-                                        setStatus("");
                                         router.get(
-                                            route("admin.students.index")
+                                            route("admin.guardians.index")
                                         );
                                     }}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -334,51 +333,74 @@ export default function GuardianIndex({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {guardians.data.map((guardian) => (
-                                        <tr
-                                            key={guardian.id}
-                                            className="bg-white divide-y divide-gray-200"
-                                        >
-                                            <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                                {guardian.user?.name}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {guardian.user?.email || "-"}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {guardian.phone || "-"}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {guardian.students
-                                                    .map((s) => s.name)
-                                                    .join(", ") || "Belum ada"}
-                                            </td>
-                                            <td className="px-6 py-4 flex space-x-2">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openModal(guardian)
-                                                    }
-                                                >
-                                                    <FaEdit className="mr-1" />
-                                                    {""}
-                                                    Edit
-                                                </SecondaryButton>
-                                                <DangerButton
-                                                    onClick={() =>
-                                                        handleDelete(guardian)
-                                                    }
-                                                >
-                                                    <FaTrash className="mr-1" />{" "}
-                                                    Hapus
-                                                </DangerButton>
+                                    {guardians.data.length > 0 ? (
+                                        guardians.data.map((guardian) => (
+                                            <tr
+                                                key={guardian.id}
+                                                className="bg-white divide-y divide-gray-200"
+                                            >
+                                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                                    {guardian.user?.name}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {guardian.user?.email ||
+                                                        "-"}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {guardian.phone || "-"}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {guardian.students
+                                                        .map((s) => s.name)
+                                                        .join(", ") ||
+                                                        "Belum ada"}
+                                                </td>
+                                                <td className="px-6 py-4 flex space-x-2">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openModal(guardian)
+                                                        }
+                                                    >
+                                                        <FaEdit className="mr-1" />
+                                                        {""}
+                                                        Edit
+                                                    </SecondaryButton>
+                                                    <DangerButton
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                guardian
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaTrash className="mr-1" />{" "}
+                                                        Hapus
+                                                    </DangerButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search
+                                                    ? `Tidak ada wali santri ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data wali santri yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
                         {/* Pagination */}
+                        <Pagination
+                            links={guardians.links}
+                            from={guardians.from}
+                            to={guardians.to}
+                            total={guardians.total}
+                        />
                     </div>
                 </div>
             </div>

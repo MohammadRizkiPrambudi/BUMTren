@@ -13,17 +13,29 @@ use Inertia\Inertia;
 
 class GuardianController extends Controller
 {
-    /**
-     * Tampilkan daftar Wali.
-     */
-    public function index()
-    {
-        $guardians = Guardian::with('user', 'students')->paginate(10);
-        $students  = Student::orderBy('name')->get(['id', 'name', 'nisn']);
 
+    public function index(Request $request)
+    {
+        $filters     = $request->all(['search']);
+        $searchQuery = $filters['search'] ?? null;
+        $guardians   = Guardian::with('user', 'students')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('user', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', '%' . $search . '%');
+                    });
+                    $q->orWhereHas('students', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', '%' . $search . '%');
+                    });
+                });
+            })
+            ->paginate(10)
+            ->withQueryString();
+        $students = Student::orderBy('name')->get(['id', 'name', 'nisn']);
         return Inertia::render('Admin/Guardians/Index', [
             'guardians' => $guardians,
             'students'  => $students,
+            'filters'   => $filters,
         ]);
     }
 
@@ -109,9 +121,6 @@ class GuardianController extends Controller
         }
     }
 
-    /**
-     * Hapus Wali.
-     */
     public function destroy(Guardian $guardian)
     {
         DB::beginTransaction();
