@@ -16,9 +16,7 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('name')->unique(); // e.g., 'Kas Kantin', 'Penjualan Barang', 'Hutang Santri'
             $table->enum('type', ['asset', 'liability', 'equity', 'revenue', 'expense']);
-            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
-            $table->boolean('is_active')->default(true);
-            $table->text('description')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('financial_accounts')->onDelete('cascade');
             $table->timestamps();
 
         });
