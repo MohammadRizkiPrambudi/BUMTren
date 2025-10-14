@@ -33,7 +33,7 @@ class StudentController extends Controller
                 }
             })
             ->latest()
-            ->paginate(1)
+            ->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Admin/Students/Index', [
