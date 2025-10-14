@@ -17,6 +17,7 @@ import {
 import SecondaryButton from "@/Components/SecondaryButton";
 import DangerButton from "@/Components/DangerButton";
 import Modal from "@/Components/Modal";
+import Pagination from "@/Components/Pagination";
 
 const CategoryForm = ({ initialData, categories, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -189,7 +190,7 @@ export default function CategoryIndex({
                         >
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700">
-                                    Cari Nama Usaha
+                                    Cari Nama Kategori
                                 </label>
                                 <div className="relative mt-1">
                                     <input
@@ -231,10 +232,9 @@ export default function CategoryIndex({
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
                                         setStatus("");
                                         router.get(
-                                            route("admin.students.index")
+                                            route("admin.categories.index")
                                         );
                                     }}
                                     className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -264,52 +264,75 @@ export default function CategoryIndex({
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {categories.data.map((category) => (
-                                        <tr key={category.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap font-semibold">
-                                                {category.name}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {category.description || "-"}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        category.is_active
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                    }`}
-                                                >
-                                                    {category.is_active
-                                                        ? "Aktif"
-                                                        : "Non-aktif"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 space-x-2 text-center">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openModal(category)
-                                                    }
-                                                >
-                                                    <FaEdit className="mr-1" />
-                                                    {""} Edit
-                                                </SecondaryButton>
-                                                {/* Hapus harus menggunakan konfirmasi dan Inertia delete request */}
-                                                <DangerButton
-                                                    onClick={() =>
-                                                        handleDelete(category)
-                                                    }
-                                                >
-                                                    <FaTrash className="mr-1" />
-                                                    {""} Hapus
-                                                </DangerButton>
+                                    {categories.data.length > 0 ? (
+                                        categories.data.map((category) => (
+                                            <tr key={category.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                                                    {category.name}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {category.description ||
+                                                        "-"}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span
+                                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                            category.is_active
+                                                                ? "bg-green-100 text-green-800"
+                                                                : "bg-red-100 text-red-800"
+                                                        }`}
+                                                    >
+                                                        {category.is_active
+                                                            ? "Aktif"
+                                                            : "Non-aktif"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 space-x-2 text-center">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openModal(category)
+                                                        }
+                                                    >
+                                                        <FaEdit className="mr-1" />
+                                                        {""} Edit
+                                                    </SecondaryButton>
+                                                    {/* Hapus harus menggunakan konfirmasi dan Inertia delete request */}
+                                                    <DangerButton
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                category
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaTrash className="mr-1" />
+                                                        {""} Hapus
+                                                    </DangerButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search ||
+                                                filters.status
+                                                    ? `Tidak ada kategori ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data kategori yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-                        {/* ... Pagination ... */}
+                        {/* Pagination */}
+                        <Pagination
+                            links={categories.links}
+                            from={categories.from}
+                            to={categories.to}
+                            total={categories.total}
+                        />
                     </div>
                 </div>
             </div>

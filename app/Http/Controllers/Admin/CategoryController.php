@@ -12,12 +12,32 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::latest()->paginate(10);
+        $filters      = $request->all(['search', 'status']);
+        $searchQuery  = $filters['search'] ?? null;
+        $statusFilter = $filters['status'] ?? null;
+
+        $categories = Category::latest()
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('class', 'like', '%' . $search . '%');
+                });
+            })
+            ->when($statusFilter !== '' && $statusFilter !== null, function ($query) use ($statusFilter) {
+                if ($statusFilter === '1') {
+                    $query->where('is_active', true);
+                } elseif ($statusFilter === '0') {
+                    $query->where('is_active', false);
+                }
+            })
+            ->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
+            'filters'    => $filters,
         ]);
     }
 
