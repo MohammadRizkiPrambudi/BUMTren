@@ -10,14 +10,42 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products   = Product::with('category')->latest()->paginate(10);
+        $filters        = $request->all(['search', 'category', 'status']);
+        $searchQuery    = $filters['search'] ?? null;
+        $statusFilter   = $filters['status'] ?? null;
+        $categoryFilter = $filters['category'] ?? null;
+        $products       = Product::with('category')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+            })
+
+            ->when($statusFilter !== '' && $statusFilter !== null, function ($query) use ($statusFilter) {
+                if ($statusFilter === '1') {
+                    $query->where('is_active', true);
+                } elseif ($statusFilter === '0') {
+                    $query->where('is_active', false);
+                }
+            })
+
+            ->when($categoryFilter, function ($query, $categoryId) {
+                if (is_numeric($categoryId)) {
+                    $query->whereHas('category', function ($q) use ($categoryId) {
+                        $q->where('category_id', $categoryId);
+                    });
+                }
+            })
+            ->latest()->paginate(10)->withQueryString();
+
         $categories = Category::pluck('name', 'id');
 
         return Inertia::render('Admin/Products/Index', [
             'products'   => $products,
             'categories' => $categories,
+            'filters'    => $filters,
         ]);
     }
 

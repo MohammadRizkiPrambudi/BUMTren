@@ -18,6 +18,7 @@ import InputError from "@/Components/InputError";
 import TextInput from "@/Components/TextInput";
 import SecondaryButton from "@/Components/SecondaryButton";
 import DangerButton from "@/Components/DangerButton";
+import Pagination from "@/Components/Pagination";
 
 const ProductForm = ({ initialData, categories, onClose, isEditing }) => {
     const { data, setData, post, put, errors, processing, reset } = useForm({
@@ -275,11 +276,8 @@ export default function ProductIndex({
                                     onChange={(e) =>
                                         setCategoryFilter(e.target.value)
                                     }
-                                    required
                                 >
-                                    <option value="">
-                                        -- Pilih Kategori --
-                                    </option>
+                                    <option value="">Semua</option>
                                     {Object.entries(categories).map(
                                         ([id, name]) => (
                                             <option key={id} value={id}>
@@ -316,7 +314,7 @@ export default function ProductIndex({
                                     type="button"
                                     onClick={() => {
                                         setSearch("");
-                                        setClassFilter("");
+                                        setCategoryFilter("");
                                         setStatus("");
                                         router.get(
                                             route("admin.products.index")
@@ -358,71 +356,93 @@ export default function ProductIndex({
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {products.data.map((product) => (
-                                        <tr key={product.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap font-semibold">
-                                                {product.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {product.category.name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                                                {product.sku || "-"}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-gray-600">
-                                                {FormatRupiah(
-                                                    Number(
-                                                        product.purchase_price
-                                                    )
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-indigo-600">
-                                                {FormatRupiah(
-                                                    Number(
-                                                        product.selling_price
-                                                    )
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        product.is_active
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                    }`}
-                                                >
-                                                    {product.is_active
-                                                        ? "Aktif"
-                                                        : "Non-aktif"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 flex space-x-2 ">
-                                                <SecondaryButton
-                                                    onClick={() =>
-                                                        openModal(product)
-                                                    }
-                                                >
-                                                    <FaEdit className="mr-1" />
-                                                    {""}
-                                                    Edit
-                                                </SecondaryButton>
-                                                <DangerButton
-                                                    onClick={() =>
-                                                        handleDelete(product)
-                                                    }
-                                                >
-                                                    <FaTrash className="mr-1" />
-                                                    {""}
-                                                    Hapus
-                                                </DangerButton>
+                                    {products.data.length > 0 ? (
+                                        products.data.map((product) => (
+                                            <tr key={product.id}>
+                                                <td className="px-6 py-4 whitespace-nowrap font-semibold">
+                                                    {product.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {product.category.name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                                                    {product.sku || "-"}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-gray-600">
+                                                    {FormatRupiah(
+                                                        Number(
+                                                            product.purchase_price
+                                                        )
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-indigo-600">
+                                                    {FormatRupiah(
+                                                        Number(
+                                                            product.selling_price
+                                                        )
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <span
+                                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                            product.is_active
+                                                                ? "bg-green-100 text-green-800"
+                                                                : "bg-red-100 text-red-800"
+                                                        }`}
+                                                    >
+                                                        {product.is_active
+                                                            ? "Aktif"
+                                                            : "Non-aktif"}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 flex space-x-2 ">
+                                                    <SecondaryButton
+                                                        onClick={() =>
+                                                            openModal(product)
+                                                        }
+                                                    >
+                                                        <FaEdit className="mr-1" />
+                                                        {""}
+                                                        Edit
+                                                    </SecondaryButton>
+                                                    <DangerButton
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                product
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaTrash className="mr-1" />
+                                                        {""}
+                                                        Hapus
+                                                    </DangerButton>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-4 text-center text-gray-500 italic"
+                                            >
+                                                {filters.search ||
+                                                filters.category ||
+                                                filters.status
+                                                    ? `Tidak ada produk ditemukan dengan kriteria pencarian tersebut`
+                                                    : "Belum ada data produk yang tercatat."}
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-
-                        {/* Pagination*/}
+                        {/* Pagination */}
+                        <Pagination
+                            links={products.links}
+                            from={products.from}
+                            to={products.to}
+                            total={products.total}
+                        />
                     </div>
                 </div>
             </div>
