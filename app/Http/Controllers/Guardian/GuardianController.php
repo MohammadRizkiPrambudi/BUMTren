@@ -2,6 +2,8 @@
 namespace App\Http\Controllers\Guardian;
 
 use App\Http\Controllers\Controller;
+use App\Models\FinancialAccount;
+use App\Models\GeneralLedger;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,6 +78,16 @@ class GuardianController extends Controller
                 'type'         => 'topup',
                 'notes'        => 'Top-Up Saldo E-Card via ' . strtoupper(str_replace('_', ' ', $request->payment_method)),
                 'reference_id' => 'SIMULASI_TOPUP_' . time() . rand(100, 999),
+            ]);
+
+            GeneralLedger::create([
+                'transaction_reference' => 'TUP-' . now()->format('YmdHis'),
+                'debit_account_id'      => FinancialAccount::where('name', 'Kas Santri')->first()->id,
+                'credit_account_id'     => FinancialAccount::where('name', 'Pendapatan Topup')->first()->id,
+                'amount'                => $request->amount,
+                'description'           => 'Top-up saldo santri ' . $student->name,
+                'student_id'            => $student->id,
+                'transaction_date'      => now(),
             ]);
 
             DB::commit();

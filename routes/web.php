@@ -2,8 +2,12 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FinancialAccountController;
+use App\Http\Controllers\Admin\GeneralLedgerController;
 use App\Http\Controllers\Admin\GuardianController as AdminGuardian;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\Reports\BalanceSheetController;
+use App\Http\Controllers\Admin\Reports\IncomeStatementController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\UnitController;
@@ -38,6 +42,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('stocks', StockController::class)->names('stocks');
         Route::resource('users', UserController::class)->names('users');
         Route::resource('guardians', AdminGuardian::class)->names('guardians');
+        Route::resource('financial-accounts', FinancialAccountController::class)
+            ->names('financial-accounts');
+        Route::get('general-ledger', [GeneralLedgerController::class, 'index'])
+            ->name('general-ledger.index');
+        Route::get('/reports/balance-sheet', [BalanceSheetController::class, 'index'])->name('reports.balance-sheet');
+        Route::get('/reports/income-statement', [IncomeStatementController::class, 'index'])->name('reports.income-statement');
     });
 
     Route::get('/admin/product/search', [StockController::class, 'getProducts'])->name('admin.stocks.products.search');

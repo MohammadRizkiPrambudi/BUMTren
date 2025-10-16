@@ -34,6 +34,19 @@ const adminMenuGroups = [
             // { name: "Permission", route: "admin.permissions.index" },
         ],
     },
+    {
+        group: "Manajemen Keuangan",
+        defaultRoute: "admin.general-ledger.index",
+        items: [
+            { name: "Akun Keuangan", route: "admin.financial-accounts.index" },
+            { name: "Jurnal Umum", route: "admin.general-ledger.index" },
+            { name: "Laporan Neraca", route: "admin.reports.balance-sheet" },
+            {
+                name: "Laporan Laba Rugi",
+                route: "admin.reports.income-statement",
+            },
+        ],
+    },
 ];
 
 const posItem = { name: "Aplikasi POS", route: "pos.index" };

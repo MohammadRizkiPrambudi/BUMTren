@@ -5,6 +5,8 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
+use App\Models\FinancialAccount;
+use App\Models\GeneralLedger;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
@@ -212,6 +214,16 @@ class OrderController extends Controller
                 'sync_time' => now(),
                 'status'    => 'success',
                 'details'   => 'Order ' . $order->invoice_number . ' berhasil disimpan.',
+            ]);
+
+            GeneralLedger::create([
+                'transaction_reference' => $order->invoice_number,
+                'debit_account_id'      => FinancialAccount::where('name', 'Harga Pokok Penjualan')->first()->id,
+                'credit_account_id'     => FinancialAccount::where('name', 'Kas Kantin')->first()->id,
+                'amount'                => $order->total_amount,
+                'description'           => 'Transaksi penjualan oleh ' . $santri->name,
+                'order_id'              => $order->id,
+                'transaction_date'      => now(),
             ]);
 
             DB::commit();

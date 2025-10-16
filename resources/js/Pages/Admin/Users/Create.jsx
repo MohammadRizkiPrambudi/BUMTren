@@ -66,6 +66,7 @@ export default function UserCreate({ auth, roles, units }) {
                                             id="name"
                                             type="text"
                                             name="name"
+                                            placeholder="Contoh: Budi Setiawan"
                                             value={data.name}
                                             className=" w-full"
                                             onChange={(e) =>
@@ -91,6 +92,7 @@ export default function UserCreate({ auth, roles, units }) {
                                             id="email"
                                             type="email"
                                             name="email"
+                                            placeholder="Contoh: BudiSetiawan@gmail.com"
                                             value={data.email}
                                             className=" w-full"
                                             onChange={(e) =>
@@ -205,6 +207,7 @@ export default function UserCreate({ auth, roles, units }) {
                                             id="password"
                                             type="password"
                                             name="password"
+                                            placeholder="Minimal 8 Karakter "
                                             value={data.password}
                                             className=" w-full"
                                             onChange={(e) =>
@@ -234,6 +237,7 @@ export default function UserCreate({ auth, roles, units }) {
                                             id="password_confirmation"
                                             type="password"
                                             name="password_confirmation"
+                                            placeholder="Minimal 8 Karakter"
                                             value={data.password_confirmation}
                                             className=" w-full"
                                             onChange={(e) =>
