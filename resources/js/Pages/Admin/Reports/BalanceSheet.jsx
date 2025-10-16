@@ -26,9 +26,12 @@ export default function BalanceSheet({
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white/90 backdrop-blur-md shadow-lg sm:rounded-2xl p-8 border border-gray-100">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
-                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                                Per Tanggal: {FormatDateIndonesia(date)}
+                        <div className="flex flex-col gap-1 mb-8">
+                            <h1 className="text-2xl font-extrabold text-gray-900">
+                                Laporan Neraca
+                            </h1>
+                            <h3 className="text-md font-medium text-gray-600">
+                                Per tanggal: {FormatDateIndonesia(date)}
                             </h3>
                         </div>
                         <div className="grid md:grid-cols-2 gap-8">
